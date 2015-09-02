@@ -1,0 +1,16 @@
+Metadata-Version: 1.1
+Name: euclidIR
+Version: 1.0.0
+Summary: Euclid IR project
+Home-page: UNKNOWN
+Author: Suhail Dhawan
+Author-email: sdhawan@eso.org
+License: MIT
+Description: Euclid SN survey project
+        
+        
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Astronomers
+Classifier: License :: OSI Approved :: MIT License

@@ -1,0 +1,8 @@
+LICENSE
+MANIFEST.in
+README.rst
+setup.py
+euclidIR.egg-info/PKG-INFO
+euclidIR.egg-info/SOURCES.txt
+euclidIR.egg-info/dependency_links.txt
+euclidIR.egg-info/top_level.txt
