@@ -6,6 +6,7 @@ Dependencies: astropy, sncosmo
 To do: get the right observer frame filter
 """
 import sncosmo
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -14,12 +15,12 @@ from astropy.table import Table
 from scipy.integrate import simps
 
 class simlc:
-    def __init__(self, sourcedir):
+    def __init__(self):
         #define the model
         self.model = sncosmo.Model(source="Hsiao")
         
         #define the directory where all the information is stored (e.g. filters, templates, magnitudes)
-        self.sourcedir = sourcedir
+        #self.sourcedir = sourcedir
 
     #use the bandpass function to create a readable filter transmission function
     def create_bandpass(self, filt):
@@ -27,16 +28,26 @@ class simlc:
         Inputs: Filter (e.g. Y, J), NOTE: has to be written in the ../filters directory as a .trans file
         Outputs: SNCOSMO readable filter
         """
+
         try:
-            wv,fl = np.loadtxt(self.sourcedir+'filters/'+filt+'.trans', unpack=True)
+            this_dir, this_file = os.path.split(__file__)
+            data_path = os.path.join(this_dir, "filters/", filt+".trans")
+            wv,fl = np.loadtxt(data_path, unpack=True)
             band = sncosmo.Bandpass(wv, fl, name=filt+'_euclid')
             return band
 
         except:
             print "The filter not in the Euclid bandpasses list"
-            return 0 
+            raise
+
     def create_CSP_bandpass(self, filt):
+        """
+        Use the filter set for CSP-I from the observatories webpage (mainly i and Y) and convert to sncosmo readable format
+        """
         try:
+            this_dir, this_file = os.path.split(__file__)
+            data_path = os.path.join(this_dir, "filters/", filt+".trans")
+            wv,fl = np.loadtxt(data_path, unpack=True)
             wv, fl = np.loadtxt(self.sourcedir+'filters/'+filt+'_CSP.dat', unpack=True)
             band = sncosmo.Bandpass(wv, fl, name=filt+'_CSP')
             return band
@@ -53,8 +64,8 @@ class simlc:
         return reds
 
     
-    def obs(self, band):
-        o=Table({'time':[-4], 'band':[band], 'gain':[1.], 'skynoise':[191.27], 'zp':[24.], 'zpsys':['ab']})
+    def obs(self, taxis, band):
+        o=Table({'time':taxis, 'band':band, 'gain':[1.], 'skynoise':[191.27], 'zp':[24.], 'zpsys':['ab']})
         return o
 
     def params(self):
@@ -64,8 +75,8 @@ class simlc:
         p = {'z':0.5, 't0':0}
         return p
 
-    def reals(self, band):
-        lcs  = sncosmo.realize_lcs(self.obs(band), self.model, [self.params()])
+    def reals(self, taxis, band):
+        lcs  = sncosmo.realize_lcs(self.obs(taxis, band), self.model, [self.params()])
         return lcs
 
 class build_lc:
@@ -87,8 +98,11 @@ class build_lc:
         model.set_source_peakabsmag(-18.4, band, zpsys)
         return model
 
+
 class filtcov:
     """
+    Class for filter coverage
+
     Determine the overlap between a rest -frame filter (redshifted) and an observer frame filter from the Euclid YJH set)
 
     """
@@ -101,7 +115,9 @@ class filtcov:
     
         
     def frac(self, filt1):
-
+        """
+        Fractional coverage of the filter in observer frame with the filters on board Euclid
+        """
         f1 = simlc().create_bandpass(filt1)
         reds_f1 = np.vstack([f1.wave, f1.trans]).T
         
@@ -154,53 +170,3 @@ class filtcov:
                 ofilt = 'H'
         return ofilt
 
-def main():
-    #clinit = simlc()
-    #zdist = clinit.redshifts(20., 56100, 56160, 1.2)
-    #print len(zdist)
-    #print clinit.reals('desr')
-    #plt.hist(zdist, histtype='step')
-    #plt.show()
-    print filtcov(.01).frac('Y')
-    #return 0
-    build = build_lc()
-    zmax_arr = np.linspace(.1, 1.2)
-
-    fh = simlc().create_bandpass('H')
-    fj = simlc().create_bandpass('J')
-    fy = simlc().create_bandpass('Y')
-    
-    fcspy = simlc().create_CSP_bandpass('Y')
-    mod = build.set_params(fy, .6)
-    print mod.bandmag(fh, 'ab', [0., 20.])
-    #return 0
-
-
-    #return 0
-    magzarr =[]; zarr=[]
-    for i in zmax_arr:
-        mod =build.set_params(fcspy, i, zpsys='vega')
-        finit = filtcov(i)
-        try:
-            fout = finit.frac('Y')
-        
-            fcosm = simlc().create_bandpass(fout)
-            magz = min(mod.bandmag(fcosm, 'ab', [0., 20.]))
-            magzarr.append(magz); zarr.append(i)
-        except:
-            i
-            #if i < .8:
-         #   magz=min(mod.bandmag(fj, 'ab', [0., 20.]))
-         #   magzarr.append(magz)
-        #else:
-         #   magz=min(mod.bandmag(filt, 'ab', [0., 20.]))
-         #   magzarr.append(magz)
-    plt.plot(magzarr, zarr, 'bo')
-    plt.plot([24, 24], [0.0, 1.2])
-    plt.plot([24.74, 24.74], [0.0, 1.2])
-    plt.ylabel('$Z_max$')
-    plt.xlabel('Mag ZP')
-    plt.show()
-if __name__=="__main__":
-    main()
-        
