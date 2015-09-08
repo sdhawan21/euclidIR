@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from simlc import simlc, build_lc
+from scipy.integrate import simps
 
 class filters:
    
@@ -46,9 +47,13 @@ class is_vis:
         self.flist = ['f090w', 'f150w', 'f200w', 'f277w']
 
     def out_mod(self, band, z):
+        """
+        Inline to set the parameters for a given filter and redshift combination
+        """
         return build_lc().set_params(band, z)
     
     def out_mag(self, band, z, sys, ep, fcosm):
+
         """
         What magnitude will be observed by JWST in the rest-frame Y band
         """
@@ -56,13 +61,80 @@ class is_vis:
         mag_arr = mod.bandmag(fcosm, sys, ep)
         return mag_arr
 
-    def filt_test(self, band):
+    def filt_test(self, band, z):
+
+        """
+        For a given instrument (in this case NIRCam), test which one has the greatest overlap with the redshifted rest-frame filter (i or Y in most cases)
+
+        Input: rest frame filter, redshift of observation
+
+        Output: Filter with greatest overlap, overlap value
+        """
+
+        #use the SNCosmo function for extracting the bandpass
+        b = sncosmo.get_bandpass(band)
+        
+        #obtain the wavelength and transmission values as python readable arrays
+        wv = b.wave
+        trans = b.trans
+
+        #redshifted wavelength for the rest frame filter 
+        wv_red = wv*(1+z)
+
+        #integrate the total flux in the region of the redshifted filter
+        tran_int = simps(trans, wv_red)
+        
+        #define array for 
+        overlap_array = []
+        print "Checking the filter list", self.flist
+
+        for i in self.flist:
+
+            bp = sncosmo.get_bandpass(i)
+            
+            wv_obs= bp.wave
+            tran_obs = bp.trans
+            if wv_red[0] > wv_obs[-1]:
+                print "The filter being tested is", i
+                print "The redshifted filter is very very red"
+
+            elif wv_red[-1] < wv_obs[0]:
+                print  "The filter being tested is", i
+                print "The redshifted filter is not red enough"
+
+            else:
+                print "There is some wavelength overlap with filter", i
+                overlap_array.append(i)
+
+        print "The NIRcam filters which overlap with the redshifted filter are: ", overlap_array
+        
+        overlap_percent=[]
+        for j in overlap_array:
+            bp = sncosmo.get_bandpass(j)
+            
+            wv_obs = bp.wave
+
+            cond = (wv_red > wv_obs[0] ) & (wv_red < wv_obs[-1])
+            
+            overlap_int=simps(trans[cond], wv_red[cond])
+
+            overlap_percent.append([j, overlap_int*100/tran_int])
+
+        #store the overlap percentage
+        overlap_percent=np.array(overlap_percent)
 
 
-    def limit_vis(self,  band,z,sys,ep, fcosm):
+        print "The percentages of the overlap are", overlap_percent
+        return overlap_percent[overlap_percent[:,1].astype('float32')==max(overlap_percent[:,1].astype('float32')) ][0]
+        
+        
+
+    def limit_vis(self,  band,z,sys,ep):
         """
         Using the JWST magnitude limit, determine whether the SN would be visible for NIRCam
         """
+        fcosm = self.filt_test(band,z)[0]
+        
         ma = self.out_mag(band, z, sys,ep, fcosm)
         cond = ma < self.limmag
 
@@ -72,9 +144,16 @@ class is_vis:
         if len(ep_vis) > 0:
             print "The SN would be observed by NIRCam"
         elif len(ep_vis) == 0:
-            print ""
+            print "No epoch of the SN is observed by NIRCam"
+        else:
+            print "The length is not a strictly positive number"
 
         return vis_arr, ep_vis
         
 
+    def zdist(self, n):
+        
+        time = 200
+        area= 20
+        
 
