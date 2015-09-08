@@ -76,6 +76,13 @@ class simlc:
         return p
 
     def reals(self, taxis, band):
+        """
+        Generate simulated light curves for a given parameter setting
+
+        """
+
+        assert len(taxis) == len(band)
+
         lcs  = sncosmo.realize_lcs(self.obs(taxis, band), self.model, [self.params()])
         return lcs
 
