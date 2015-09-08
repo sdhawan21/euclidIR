@@ -88,7 +88,7 @@ class discover:
 
             bp = simlc().create_LSST_bandpass(i)
             
-            trans_thresh = max(bp.trans)/1e2
+            trans_thresh = max(bp.trans)/1e1
             
             
             wv_obs = bp.wave[bp.trans > trans_thresh]
@@ -118,12 +118,20 @@ class discover:
                 
                 wave_eff_arr.append([k[0], abs(bp.wave_eff-eff_wave_obs)])
 
-        print "The difference between the effective wavelength for the LSST filter and the redshifted rest frame filter is:", wave_eff_arr
+        print "The difference between the effective wavelength for the LSST filters and the redshifted rest frame filter is:", wave_eff_arr
+
+   
+        #deal with unique and non-unique cases separately.
+
         if len(wave_eff_arr) > 0:
+            print "In case of similar overlapping values, effective wavelengths were used to decide which filter to use"
+            
             wave_eff_arr = np.array(wave_eff_arr)
-            return wave_eff_arr[wave_eff_arr[:,1] == min(wave_eff_arr[:,1])]
-        else:
+
     
+            return wave_eff_arr[wave_eff_arr[:,1].astype('float32') == min(wave_eff_arr[:,1].astype('float32'))]
+        else:
+            print "The values for the overlap were all unique"
             return overlap_percent[overlap_percent[:,1].astype('float32')==max(overlap_percent[:,1].astype('float32')) ][0]
         
 
