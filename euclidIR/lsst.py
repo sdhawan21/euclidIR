@@ -6,7 +6,6 @@ Aims:
 2. Optical data to complement sparsely sampled light curves in the YJH
 
 Limits: Filter for the discovery
-
 """
 import sncosmo
 import astropy
@@ -16,7 +15,7 @@ import os
 
 from simlc import simlc
 from jwst import z_sne, filters
-
+from scipy.integrate import simps
 
 class discover:
     """
@@ -33,7 +32,7 @@ class discover:
 
          
         
-    def obs_filt(self, band):
+    def obs_filt(self, band ,z):
         
         """
         For a given instrument (in this case NIRCam), test which one has the greatest overlap with the redshifted rest-frame filter (i or Y in most cases)
@@ -59,12 +58,12 @@ class discover:
         #define array for filling the filters that have any wavelength overlap
 
         overlap_array = []
-        print "Checking the filter list", self.flist
+        print "Checking the filter list", self.filters
 
         for i in self.filters:
             
             #extract the bandpass for LSST
-            bp = simlc.simlc().create_LSST_bandpass(i)
+            bp = simlc().create_LSST_bandpass(i)
             
             wv_obs= bp.wave
             tran_obs = bp.trans
@@ -87,9 +86,12 @@ class discover:
         overlap_percent=[]
         for j in overlap_array:
 
-            bp = simlc.simlc().create_LSST_bandpass(i)
+            bp = simlc().create_LSST_bandpass(i)
             
-            wv_obs = bp.wave
+            trans_thresh = max(bp.trans)/1e2
+            
+            
+            wv_obs = bp.wave[bp.trans > trans_thresh]
 
             cond = (wv_red > wv_obs[0] ) & (wv_red < wv_obs[-1])
             
@@ -102,15 +104,37 @@ class discover:
 
 
         print "The percentages of the overlap are", overlap_percent
-        return overlap_percent[overlap_percent[:,1].astype('float32')==max(overlap_percent[:,1].astype('float32')) ][0]
+
+        wave_eff_arr =[]
         
+        eff_wave_rf = b.wave_eff
+        eff_wave_obs = eff_wave_rf *(1+z)
+
+        for k in overlap_percent:
+
+            if len(np.unique(overlap_percent[:,1])) < len(overlap_percent):
+                
+                bp = simlc().create_LSST_bandpass(k[0])
+                
+                wave_eff_arr.append([k[0], abs(bp.wave_eff-eff_wave_obs)])
+
+        print "The difference between the effective wavelength for the LSST filter and the redshifted rest frame filter is:", wave_eff_arr
+        if len(wave_eff_arr) > 0:
+            wave_eff_arr = np.array(wave_eff_arr)
+            return wave_eff_arr[wave_eff_arr[:,1] == min(wave_eff_arr[:,1])]
+        else:
+    
+            return overlap_percent[overlap_percent[:,1].astype('float32')==max(overlap_percent[:,1].astype('float32')) ][0]
+        
+
         def is_discover(self, band, z, sys, ep):
             """
             For a given 
             """
             fcosm = self.obs_filt(band)[0]
+            mod = simlc().set_params(band, z, peakmag=-19.1)
 
-            mag_arr=filters().out_mag(band,z, sys, ep, fcosm)
+            mag_arr=mod.bandmag(fcosm, sys, ep)
             
             filt_arr = np.array(self.filters)
             limmag = np.array(self.limits)[filt_arr == fcosm]
@@ -122,4 +146,23 @@ class discover:
                 return disc_arr
             else:
                 print "No Observation above the threshold"
-            
+                return 0 
+        
+        def z_dist_lsst(self):
+            time = 1000
+            area= 10
+            return list(sncosmo.zdist(0, 1.2, time=time, area=area))
+
+        def z_disc_lsst(self, band, z, sys,ep):
+            """
+            the redshift distribution of the SNe actually discovered by LSST
+            """
+            expected_z = self.z_dist_lsst
+
+            obs_z_arr=[]
+            for i in expected_z:
+                disc_arr =self.is_discover(band,z,sys,ep)
+                if len(disc_arr) > 1:
+                    obs_z_arr.append(i)
+
+            return np.array(obs_z_arr)

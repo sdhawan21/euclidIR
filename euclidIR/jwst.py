@@ -1,4 +1,4 @@
-s"""
+"""
 JWST High-z SNe survey
 
 Aim: As a 'third' configuration of a high-z SN survey, JWST provides the high-z arm to a low-z survey by Euclid

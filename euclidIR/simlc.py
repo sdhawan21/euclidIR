@@ -59,12 +59,15 @@ class simlc:
         Use the filter set for LSST
         """
         try:
+        
             this_dir, this_file = os.path.split(__file__)
             #data_path = os.path.join(this_dir, "filters/lsst/LSST_", filt+".dat")
-            
+        
             #wv,fl = np.loadtxt(data_path, unpack=True)
-            print self.
-            wv, fl = np.loadtxt(self.sourcedir+'filters/lsst/LSST_'+filt+'.dat', unpack=True)
+           
+            
+            wv, fl = np.loadtxt(os.path.join(this_dir, 'filters/lsst/', 'LSST_'+filt+'.dat'), unpack=True)
+            
             band = sncosmo.Bandpass(wv, fl, name=filt+'_LSST')
             return band
         except:
