@@ -54,7 +54,24 @@ class simlc:
         except:
             print "Not a CSP filter"
             return 0
-
+    def create_LSST_bandpass(self, filt):
+        """
+        Use the filter set for LSST
+        """
+        try:
+            this_dir, this_file = os.path.split(__file__)
+            #data_path = os.path.join(this_dir, "filters/lsst/LSST_", filt+".dat")
+            
+            #wv,fl = np.loadtxt(data_path, unpack=True)
+            print self.
+            wv, fl = np.loadtxt(self.sourcedir+'filters/lsst/LSST_'+filt+'.dat', unpack=True)
+            band = sncosmo.Bandpass(wv, fl, name=filt+'_LSST')
+            return band
+        except:
+            print "Not an LSST filter"
+            return 0
+            #sys.exit(1)
+            
     def redshifts(self, area, tmin, tmax, zmax):
         """
         Get the redshifts of the supernovae in the survey
@@ -96,13 +113,13 @@ class build_lc:
         model=sncosmo.Model('Hsiao')
         return model
 
-    def set_params(self, band, z, zpsys='ab'):
+    def set_params(self, band, z, peakmag=-18.4, zpsys='ab'):
         """
         set the model parameters, most importantly the absolute magnitude scale for the tempalte spectra.
         """
         model=self.modeldef()
         model.set(z=z)
-        model.set_source_peakabsmag(-18.4, band, zpsys)
+        model.set_source_peakabsmag(peakmag, band, zpsys)
         return model
 
 

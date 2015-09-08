@@ -1,5 +1,10 @@
-"""
+s"""
 JWST High-z SNe survey
+
+Aim: As a 'third' configuration of a high-z SN survey, JWST provides the high-z arm to a low-z survey by Euclid
+
+Dependencies : sncosmo, astropy, scipy, numpy 
+
 """
 
 import sncosmo
@@ -28,7 +33,7 @@ class filters:
         else:
             return band
 
-class is_vis:
+class z_sne:
     """
     To find whether an SN is observed by JWST or not
 
@@ -42,9 +47,11 @@ class is_vis:
         #JWST AB system limiting magnitude
 
         self.limmag = 28. 
-    
+        
+        # set of filters on NIRCam (Note, not looking at MIRI)
+        ## a few of them (e.g. f356w for rest-frame Y band) will not be required but is nonetheless tested for completeness
 
-        self.flist = ['f090w', 'f150w', 'f200w', 'f277w']
+        self.flist = ['f070w', 'f090w','f115w', 'f150w', 'f200w', 'f277w', 'f356w', 'f444w']
 
     def out_mod(self, band, z):
         """
@@ -84,16 +91,20 @@ class is_vis:
         #integrate the total flux in the region of the redshifted filter
         tran_int = simps(trans, wv_red)
         
-        #define array for 
+        #define array for filling the filters that have any wavelength overlap
+
         overlap_array = []
         print "Checking the filter list", self.flist
 
         for i in self.flist:
-
+            
+            #extract the bandpass for NIRcam
             bp = sncosmo.get_bandpass(i)
             
             wv_obs= bp.wave
             tran_obs = bp.trans
+
+            
             if wv_red[0] > wv_obs[-1]:
                 print "The filter being tested is", i
                 print "The redshifted filter is very very red"
@@ -151,9 +162,59 @@ class is_vis:
         return vis_arr, ep_vis
         
 
-    def zdist(self, n):
-        
+    def zdist(self, n, z=[0.8, 1.2]):
+        """
+        get a redshift distribution for a number of SNe from JWST
+        (aiming for ~ 100 or lower)
+        """
         time = 200
         area= 20
         
+        reds= list(sncosmo.zdist(z[0], z[1], time = time, area =area))
+        
+        while len(reds) > n:
+
+            time -= 10
+            
+            reds= list(sncosmo.zdist(z[0], z[1], time=time, area=area))
+        
+        return reds
+
+    def obs_redshift_dist(self, n, band, sys, ep):
+        """
+
+        Use the derived redshift distribution for the redshift range and then truncate based on the limiting magnitude of NIRCam 
+
+        """
+
+
+        #obtain the redshift distribution 
+        expected_z_dist = self.zdist(n)
+        
+        obs_redshift_dist=[]
+
+        for i in expected_z_dist:
+            
+            fcosm = self.filt_test(band, i)[0]
+            vis_arr, ep_arr = self.limit_vis(band, i, sys, ep)
+            if len(vis_arr) == 0 :
+                print "List is empty, no detection from JWST"
+            else:
+                obs_redshift_dist.append(i)
+
+        return np.array(obs_redshift_dist)
+
+    def plot_z_comp(self, n, band, sys,ep):
+        """
+        Compare the JWST redshift distribution with the expected z-distribution from the rates
+        """
+        exp = self.zdist(n)
+
+        obs = self.obs_redshift_dist(n, band, sys,ep)
+        plt.hist(exp, histtype='step', label='Expected z')
+        plt.hist(obs, histtype='step', label='Observed z')
+        plt.legend(loc=0)
+        plt.show()
+        
+            
 
