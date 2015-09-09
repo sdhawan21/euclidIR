@@ -116,7 +116,9 @@ class build_lc:
     """
 
     def __init__(self):
+
         self.filters=['Y', 'J', 'H']
+        self.limits =['24.03', '24.08', '24.74']
 
     def modeldef(self):
         #source = sncosmo.get_source('hsiao', version='2.0')
@@ -136,17 +138,21 @@ class build_lc:
             """
             For a given 
             """
-            fcosm = filtcov(z).obs_filt(band, z)[0]
-            mod = simlc().set_params(band, z, peakmag=peakmag)
+            
+            input_filter = filtcov(z).obs_filt(band, z)[0]
+            print input_filter
+            fcosm = simlc().create_bandpass(input_filter)
+            mod = self.set_params(band, z, peakmag=peakmag)
 
+            
             mag_arr=mod.bandmag(fcosm, sys, ep)
             
             filt_arr = np.array(self.filters)
             limmag = np.array(self.limits)[filt_arr == fcosm]
             
             disc_arr = mag_arr[mag_arr < limmag]
-
-            if len(disc_arr) > 0:
+            disc_arr = np.array(disc_arr)
+            if not disc_arr:
                 print "SN is discovered by Euclid"
                 return disc_arr
             else:
@@ -167,10 +173,12 @@ class build_lc:
         obs_z_arr=[]
         for i in expected_z:
             disc_arr =self.is_discover(band,i,sys,ep)
-            if len(disc_arr) > 1:
+            disc_arr = np.array(disc_arr)
+            if not disc_arr:
                 obs_z_arr.append(i)
 
         return np.array(obs_z_arr)
+
 
 class filtcov:
     """
@@ -301,7 +309,7 @@ class filtcov:
         overlap_percent=[]
         for j in overlap_array:
 
-            bp = simlc().create_LSST_bandpass(i)
+            bp = simlc().create_bandpass(i)
             
             trans_thresh = max(bp.trans)/1e1
             
@@ -329,7 +337,7 @@ class filtcov:
 
             if len(np.unique(overlap_percent[:,1])) < len(overlap_percent):
                 
-                bp = simlc().create_LSST_bandpass(k[0])
+                bp = simlc().create_bandpass(k[0])
                 
                 wave_eff_arr.append([k[0], abs(bp.wave_eff-eff_wave_obs)])
 
@@ -344,7 +352,7 @@ class filtcov:
             wave_eff_arr = np.array(wave_eff_arr)
 
     
-            return wave_eff_arr[wave_eff_arr[:,1].astype('float32') == min(wave_eff_arr[:,1].astype('float32'))]
+            return wave_eff_arr[wave_eff_arr[:,1].astype('float32') == min(wave_eff_arr[:,1].astype('float32'))][0]
         else:
             print "The values for the overlap were all unique"
             return overlap_percent[overlap_percent[:,1].astype('float32')==max(overlap_percent[:,1].astype('float32')) ][0]
