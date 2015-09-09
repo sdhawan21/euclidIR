@@ -5,14 +5,16 @@ Generate a magnitude distribution from the template based on the fits from the S
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+import os
 
 from glob import glob 
 
 #imports from within the package
 from lsst import discover
-from jwst import filters
+from jwst import filters, z_sne
+
 #simlc is the euclid filters module
-from simlc import build_lc
+from simlc import build_lc, filtcov
 
 
 class abs_mag:
@@ -30,12 +32,14 @@ class abs_mag:
                 return dist
 
         
-        def final_dist(self, n, band, sys,ep):
+        def final_z_dist(self, n, band, sys,ep):
 
                 mag_dist = self.load_dist()[:,1]
 
                 jwst_z_dist = z_sne().obs_redshift_dist(n, band, sys, ep)
-                euclid_z_dist = 
+                euclid_z_dist = build_lc().z_disc_euclid(band, sys, ep)
+
+                return np.concatenate([euclid_z_dist, jwst_z_dist])
                 
                 
                 

@@ -57,6 +57,7 @@ class simlc:
         except:
             print "Not a CSP filter"
             return 0
+
     def create_LSST_bandpass(self, filt):
         """
         Use the filter set for LSST
@@ -115,7 +116,7 @@ class build_lc:
     """
 
     def __init__(self):
-        self.euc_filters=['Y', 'J', 'H']
+        self.filters=['Y', 'J', 'H']
 
     def modeldef(self):
         #source = sncosmo.get_source('hsiao', version='2.0')
@@ -131,6 +132,45 @@ class build_lc:
         model.set_source_peakabsmag(peakmag, band, zpsys)
         return model
 
+    def is_discover(self, band, z, sys, ep, peakmag=-18.4):
+            """
+            For a given 
+            """
+            fcosm = filtcov(z).obs_filt(band, z)[0]
+            mod = simlc().set_params(band, z, peakmag=peakmag)
+
+            mag_arr=mod.bandmag(fcosm, sys, ep)
+            
+            filt_arr = np.array(self.filters)
+            limmag = np.array(self.limits)[filt_arr == fcosm]
+            
+            disc_arr = mag_arr[mag_arr < limmag]
+
+            if len(disc_arr) > 0:
+                print "SN is discovered by Euclid"
+                return disc_arr
+            else:
+                print "No Observation above the threshold"
+                return 0 
+
+    def expected_z_dist(self):
+        time = 200
+        area = 20
+
+        return list(sncosmo.zdist(0, 0.8, time=time, area=area))
+
+    def z_disc_euclid(self, band, sys,ep):
+        """
+        From the expected distribution, which SNe are discovered
+        """
+        expected_z= self.expected_z_dist()
+        obs_z_arr=[]
+        for i in expected_z:
+            disc_arr =self.is_discover(band,i,sys,ep)
+            if len(disc_arr) > 1:
+                obs_z_arr.append(i)
+
+        return np.array(obs_z_arr)
 
 class filtcov:
     """
@@ -145,7 +185,7 @@ class filtcov:
         self.j = simlc().create_bandpass('J')
         self.h = simlc().create_bandpass('H')
 
-    
+        self.filters = ['Y', 'J', 'H']
         
     def frac(self, filt1):
         """
@@ -203,6 +243,7 @@ class filtcov:
                 ofilt = 'H'
         return ofilt
 
+
     def obs_filt(self, band ,z):
         
         """
@@ -214,8 +255,11 @@ class filtcov:
         """
 
         #use the SNCosmo function for extracting the bandpass
-        b = sncosmo.get_bandpass(band)
-        
+        try:
+            b = sncosmo.get_bandpass(band)
+        except:
+            b = simlc().create_bandpass(band)
+            
         #obtain the wavelength and transmission values as python readable arrays
         wv = b.wave
         trans = b.trans
@@ -234,7 +278,7 @@ class filtcov:
         for i in self.filters:
             
             #extract the bandpass for LSST
-            bp = simlc().create_LSST_bandpass(i)
+            bp = simlc().create_bandpass(i)
             
             wv_obs= bp.wave
             tran_obs = bp.trans
@@ -252,7 +296,7 @@ class filtcov:
                 print "There is some wavelength overlap with filter", i
                 overlap_array.append(i)
 
-        print "The LSST filters which overlap with the redshifted filter are: ", overlap_array
+        print "The Euclid filters which overlap with the redshifted filter are: ", overlap_array
         
         overlap_percent=[]
         for j in overlap_array:

@@ -17,9 +17,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
+from scipy.integrate import simps
+
+#imports from within the package
 from simlc import simlc
 from jwst import z_sne, filters
-from scipy.integrate import simps
 
 class discover:
     """
