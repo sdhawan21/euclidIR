@@ -3,7 +3,10 @@ Simulating Light Curves for the Euclid SN survey in the Deep Fields
 
 Dependencies: astropy, sncosmo
 
-To do: get the right observer frame filter
+
+euclid discovery in the deep drilling fields
+
+
 """
 import sncosmo
 import os
@@ -118,7 +121,9 @@ class build_lc:
     def __init__(self):
 
         self.filters=['Y', 'J', 'H']
-        self.limits =['24.03', '24.08', '24.74']
+
+        #from Table 1 Astier et al. 2014
+        self.limits =['24.03', '24.08', '23.98']
 
     def modeldef(self):
         #source = sncosmo.get_source('hsiao', version='2.0')
@@ -131,39 +136,58 @@ class build_lc:
         """
         model=self.modeldef()
         model.set(z=z)
-        model.set_source_peakabsmag(peakmag, band, zpsys)
+        
+        try:
+            model.set_source_peakabsmag(peakmag, band, zpsys)
+        except:
+            model.set_source_peakabsmag(peakmag, simlc().create_bandpass(band), zpsys)
         return model
+
 
     def is_discover(self, band, z, sys, ep, peakmag=-18.4):
             """
-            For a given 
+            INPUTS: Filter (rest frame), Redshift, Magnitude System, Epochs of observation 
+            OPTIONS: Peak magnitude
+
+            Outputs: array of observed magnitudes that are above the detection limit
             """
             
             input_filter = filtcov(z).obs_filt(band, z)[0]
-            print input_filter
-            fcosm = simlc().create_bandpass(input_filter)
+            
+
+            fcosm = simlc().create_bandpass(input_filter[0])
+
             mod = self.set_params(band, z, peakmag=peakmag)
 
             
             mag_arr=mod.bandmag(fcosm, sys, ep)
-            
+
             filt_arr = np.array(self.filters)
-            limmag = np.array(self.limits)[filt_arr == fcosm]
+            limmag = np.array(self.limits)[filt_arr == input_filter[0]]
+            print limmag, mag_arr
+            disc_arr = mag_arr[mag_arr < float(limmag[0])]
             
-            disc_arr = mag_arr[mag_arr < limmag]
-            disc_arr = np.array(disc_arr)
+            
+            disc_arr = list(disc_arr)
             if not disc_arr:
+                print "No Observation above the threshold"
+            
+                return []
+            else:
                 print "SN is discovered by Euclid"
                 return disc_arr
-            else:
-                print "No Observation above the threshold"
-                return 0 
 
-    def expected_z_dist(self):
+    def expected_z_dist(self, z=[0., 0.8]):
+        """
+        For a 200d 20 square degree survey, the redshift distribution of expected supernovae (no magnitude cuts)
+
+        Zmax  set by the maximum redshift of the rest frame filters
+
+        """
         time = 200
         area = 20
 
-        return list(sncosmo.zdist(0, 0.8, time=time, area=area))
+        return sorted(list(sncosmo.zdist(z[0], z[1], time=time, area=area)))
 
     def z_disc_euclid(self, band, sys,ep):
         """
@@ -171,10 +195,17 @@ class build_lc:
         """
         expected_z= self.expected_z_dist()
         obs_z_arr=[]
+
         for i in expected_z:
+
             disc_arr =self.is_discover(band,i,sys,ep)
-            disc_arr = np.array(disc_arr)
+            
+            #disc_arr = np.array(disc_arr)
+            disc_arr =list(disc_arr)
+
             if not disc_arr:
+                print "No observations"
+            else:
                 obs_z_arr.append(i)
 
         return np.array(obs_z_arr)
@@ -288,10 +319,12 @@ class filtcov:
             #extract the bandpass for LSST
             bp = simlc().create_bandpass(i)
             
-            wv_obs= bp.wave
             tran_obs = bp.trans
 
-            
+            trans_thresh = max(tran_obs)/1e5
+
+            wv_obs = bp.wave[bp.trans > trans_thresh]
+            print wv_red[0], wv_obs[0], wv_red[-1], wv_obs[-1]
             if wv_red[0] > wv_obs[-1]:
                 print "The filter being tested is", i
                 print "The redshifted filter is very very red"
@@ -307,11 +340,12 @@ class filtcov:
         print "The Euclid filters which overlap with the redshifted filter are: ", overlap_array
         
         overlap_percent=[]
+
         for j in overlap_array:
 
-            bp = simlc().create_bandpass(i)
+            bp = simlc().create_bandpass(j)
             
-            trans_thresh = max(bp.trans)/1e1
+            trans_thresh = max(bp.trans)/1e5
             
             
             wv_obs = bp.wave[bp.trans > trans_thresh]

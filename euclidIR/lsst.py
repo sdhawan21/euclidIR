@@ -28,6 +28,7 @@ class discover:
     Find whether an SN is discovered by LSST (to be followed-up by JWST)
     """
     def __init__(self):
+
         self.filters=['u', 'g','r', 'i', 'z', 'y4']
 
         self.limits = [26.47, 26.35, 25.96, 25.50, 24.51]

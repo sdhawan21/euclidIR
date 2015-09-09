@@ -11,6 +11,13 @@ Three main Strategies:
 Dependencies
 astropy, sncosmo
 
+Installation:
+	git clone https://github.com/sdhawan21/euclidIR.git
+
+	cd euclidIR
+
+
+	python setup.py install
 
 Filter set sources:
 	LSST: SNANA, R.Kessler
