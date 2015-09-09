@@ -175,7 +175,7 @@ class build_lc:
                 return []
             else:
                 print "SN is discovered by Euclid"
-                return disc_arr
+                return list(disc_arr)
 
     def expected_z_dist(self, z=[0., 0.8]):
         """
@@ -201,7 +201,7 @@ class build_lc:
             disc_arr =self.is_discover(band,i,sys,ep)
             
             #disc_arr = np.array(disc_arr)
-            disc_arr =list(disc_arr)
+            #disc_arr =list(disc_arr)
 
             if not disc_arr:
                 print "No observations"
