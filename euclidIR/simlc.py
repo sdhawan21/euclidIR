@@ -23,7 +23,9 @@ class simlc:
         #self.sourcedir = sourcedir
 
     #use the bandpass function to create a readable filter transmission function
+  
     def create_bandpass(self, filt):
+
         """
         Inputs: Filter (e.g. Y, J), NOTE: has to be written in the ../filters directory as a .trans file
         Outputs: SNCOSMO readable filter
@@ -44,6 +46,7 @@ class simlc:
         """
         Use the filter set for CSP-I from the observatories webpage (mainly i and Y) and convert to sncosmo readable format
         """
+
         try:
             this_dir, this_file = os.path.split(__file__)
             data_path = os.path.join(this_dir, "filters/", filt+".trans")
@@ -110,6 +113,9 @@ class build_lc:
     """
     Unlike the previous class, this one only calculates a single light curve for a given bandpass and redshift (and model)
     """
+
+    def __init__(self):
+        self.euc_filters=['Y', 'J', 'H']
 
     def modeldef(self):
         #source = sncosmo.get_source('hsiao', version='2.0')
@@ -197,3 +203,104 @@ class filtcov:
                 ofilt = 'H'
         return ofilt
 
+    def obs_filt(self, band ,z):
+        
+        """
+        For a given instrument (in this case NIRCam), test which one has the greatest overlap with the redshifted rest-frame filter (i or Y in most cases)
+
+        Input: rest frame filter, redshift of observation
+
+        Output: Filter with greatest overlap, overlap value
+        """
+
+        #use the SNCosmo function for extracting the bandpass
+        b = sncosmo.get_bandpass(band)
+        
+        #obtain the wavelength and transmission values as python readable arrays
+        wv = b.wave
+        trans = b.trans
+
+        #redshifted wavelength for the rest frame filter 
+        wv_red = wv*(1+z)
+
+        #integrate the total flux in the region of the redshifted filter
+        tran_int = simps(trans, wv_red)
+        
+        #define array for filling the filters that have any wavelength overlap
+
+        overlap_array = []
+        print "Checking the filter list", self.filters
+
+        for i in self.filters:
+            
+            #extract the bandpass for LSST
+            bp = simlc().create_LSST_bandpass(i)
+            
+            wv_obs= bp.wave
+            tran_obs = bp.trans
+
+            
+            if wv_red[0] > wv_obs[-1]:
+                print "The filter being tested is", i
+                print "The redshifted filter is very very red"
+
+            elif wv_red[-1] < wv_obs[0]:
+                print  "The filter being tested is", i
+                print "The redshifted filter is not red enough"
+
+            else:
+                print "There is some wavelength overlap with filter", i
+                overlap_array.append(i)
+
+        print "The LSST filters which overlap with the redshifted filter are: ", overlap_array
+        
+        overlap_percent=[]
+        for j in overlap_array:
+
+            bp = simlc().create_LSST_bandpass(i)
+            
+            trans_thresh = max(bp.trans)/1e1
+            
+            
+            wv_obs = bp.wave[bp.trans > trans_thresh]
+
+            cond = (wv_red > wv_obs[0] ) & (wv_red < wv_obs[-1])
+            
+            overlap_int=simps(trans[cond], wv_red[cond])
+
+            overlap_percent.append([j, overlap_int*100/tran_int])
+
+        #store the overlap percentage
+        overlap_percent=np.array(overlap_percent)
+
+
+        print "The percentages of the overlap are", overlap_percent
+
+        wave_eff_arr =[]
+        
+        eff_wave_rf = b.wave_eff
+        eff_wave_obs = eff_wave_rf *(1+z)
+
+        for k in overlap_percent:
+
+            if len(np.unique(overlap_percent[:,1])) < len(overlap_percent):
+                
+                bp = simlc().create_LSST_bandpass(k[0])
+                
+                wave_eff_arr.append([k[0], abs(bp.wave_eff-eff_wave_obs)])
+
+        print "The difference between the effective wavelength for the LSST filters and the redshifted rest frame filter is:", wave_eff_arr
+
+   
+        #deal with unique and non-unique cases separately.
+
+        if len(wave_eff_arr) > 0:
+            print "In case of similar overlapping values, effective wavelengths were used to decide which filter to use"
+            
+            wave_eff_arr = np.array(wave_eff_arr)
+
+    
+            return wave_eff_arr[wave_eff_arr[:,1].astype('float32') == min(wave_eff_arr[:,1].astype('float32'))]
+        else:
+            print "The values for the overlap were all unique"
+            return overlap_percent[overlap_percent[:,1].astype('float32')==max(overlap_percent[:,1].astype('float32')) ][0]

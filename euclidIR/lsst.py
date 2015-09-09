@@ -5,7 +5,11 @@ Aims:
 1. A High-z discovery machine for space-based follow up
 2. Optical data to complement sparsely sampled light curves in the YJH
 
-Limits: Filter for the discovery
+Limits: Filter for the discovery, Absolute magnitude of the z and y4 filters 
+
+Filters: From SNANA (R. Kessler)
+Limits: Astier et al. 2014 (DESIRE survey, LSST DDF for intermediate z)
+
 """
 import sncosmo
 import astropy
@@ -19,7 +23,7 @@ from scipy.integrate import simps
 
 class discover:
     """
-    Find whether an SN is discovered by LSST to be followed-up by JWST
+    Find whether an SN is discovered by LSST (to be followed-up by JWST)
     """
     def __init__(self):
         self.filters=['u', 'g','r', 'i', 'z', 'y4']

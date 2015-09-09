@@ -23,6 +23,11 @@ class filters:
         self.flist = ['f070w', 'f090w','f115w', 'f150w', 'f200w', 'f277w', 'f356w']
     
     def get_jwst_filt(self, indexx, pl='No'):
+        """
+        From the filters described above, select a JWST and optionally plot it
+        Input: Numerical index for the array
+
+        """
         filt_val=self.flist[indexx]
         band = sncosmo.get_bandpass(filt_val)
         
