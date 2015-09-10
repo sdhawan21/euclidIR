@@ -37,7 +37,14 @@ class abs_mag:
 
         
         def final_z_dist(self, n, band, sys,ep):
-
+                """
+                Output redshift distribution for the Euclid Survey
+                
+                Inputs: Number of SNe observed by JWST
+                        
+        
+                Output: Redshift distribution
+                """
                 mag_dist = self.load_dist()[:,1]
 
                 jwst_z_dist = z_sne().obs_redshift_dist(n, band, sys, ep)

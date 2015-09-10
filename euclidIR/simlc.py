@@ -134,6 +134,9 @@ class build_lc:
         #from Table 1 Astier et al. 2014
         self.limits =['24.03', '24.08', '24.74']
 
+        #from the Deep Survey (DESIRE)
+        self.deep_limits = ['25.51', '25.83', '26.08']
+
     def modeldef(self):
         #source = sncosmo.get_source('hsiao', version='2.0')
         model=sncosmo.Model('Hsiao')
@@ -153,7 +156,7 @@ class build_lc:
         return model
 
 
-    def is_discover(self, band, z, sys, ep, peakmag=-18.4):
+    def is_discover(self, band, z, sys, ep, peakmag=-18.4, deep='No'):
             """
             INPUTS: Filter (rest frame), Redshift, Magnitude System, Epochs of observation 
             OPTIONS: Absolute Peak magnitude
@@ -172,7 +175,13 @@ class build_lc:
             mag_arr=mod.bandmag(fcosm, sys, ep)
 
             filt_arr = np.array(self.filters)
-            limmag = np.array(self.limits)[filt_arr == input_filter[0]]
+
+            if deep == 'Yes':
+                limarr = np.array(self.limits)
+            else:
+                limarr = np.array(self.deep_limits)
+
+            limmag = limarr[filt_arr == input_filter[0]]
             print limmag, mag_arr
             disc_arr = mag_arr[mag_arr < float(limmag[0])]
             
@@ -201,16 +210,16 @@ class build_lc:
 
         return sorted(list(sncosmo.zdist(z[0], z[1], time=time, area=area)))
 
-    def z_disc_euclid(self, band, sys,ep):
+    def z_disc_euclid(self, band, sys,ep, z=[0., 0.8], deep='No'):
         """
         From the expected distribution, which SNe are discovered
         """
-        expected_z= self.expected_z_dist()
+        expected_z= self.expected_z_dist(z=z)
         obs_z_arr=[]
 
         for i in expected_z:
 
-            disc_arr =self.is_discover(band,i,sys,ep)
+            disc_arr =self.is_discover(band,i,sys,ep, deep=deep)
             
             #disc_arr = np.array(disc_arr)
             #disc_arr =list(disc_arr)
