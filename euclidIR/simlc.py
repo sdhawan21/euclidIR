@@ -18,6 +18,9 @@ from astropy.table import Table
 from scipy.integrate import simps
 
 class simlc:
+    """
+    Class to create bandpasses for Euclid
+    """
     def __init__(self):
         #define the model
         self.model = sncosmo.Model(source="Hsiao")
@@ -92,10 +95,16 @@ class simlc:
 
     
     def obs(self, taxis, band):
+
+        """
+        Setup the observation parameters into an astropy table
+        """
+
         o=Table({'time':taxis, 'band':band, 'gain':[1.], 'skynoise':[191.27], 'zp':[24.], 'zpsys':['ab']})
         return o
 
     def params(self):
+
         """
         Model parameters for the survey
         """
@@ -123,7 +132,7 @@ class build_lc:
         self.filters=['Y', 'J', 'H']
 
         #from Table 1 Astier et al. 2014
-        self.limits =['24.03', '24.08', '23.98']
+        self.limits =['24.03', '24.08', '24.74']
 
     def modeldef(self):
         #source = sncosmo.get_source('hsiao', version='2.0')
@@ -147,7 +156,7 @@ class build_lc:
     def is_discover(self, band, z, sys, ep, peakmag=-18.4):
             """
             INPUTS: Filter (rest frame), Redshift, Magnitude System, Epochs of observation 
-            OPTIONS: Peak magnitude
+            OPTIONS: Absolute Peak magnitude
 
             Outputs: array of observed magnitudes that are above the detection limit
             """
@@ -177,13 +186,16 @@ class build_lc:
                 print "SN is discovered by Euclid"
                 return list(disc_arr)
 
+
     def expected_z_dist(self, z=[0., 0.8]):
+
         """
         For a 200d 20 square degree survey, the redshift distribution of expected supernovae (no magnitude cuts)
 
         Zmax  set by the maximum redshift of the rest frame filters
 
         """
+
         time = 200
         area = 20
 
@@ -215,7 +227,7 @@ class filtcov:
     """
     Class for filter coverage
 
-    Determine the overlap between a rest -frame filter (redshifted) and an observer frame filter from the Euclid YJH set)
+    Determine the overlap between a rest -frame filter (redshifted) and an observer frame filter from the Euclid YJH set
 
     """
     def __init__(self, z):
