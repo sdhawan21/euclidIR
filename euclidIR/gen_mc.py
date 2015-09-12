@@ -76,7 +76,10 @@ class abs_mag:
                 else:
                         s_val = np.std(in_gauss[:,1])
                 peak_real = np.random.normal(np.mean(in_gauss[:,1]), s_val, len(z_array))
-                err_real =  np.random.normal(np.mean(in_gauss[:,-1]), s_val, len(z_array))
+
+                st = np.std(in_gauss[:,-1])
+                
+                err_real =  np.random.uniform(np.mean(in_gauss[:,-1])- 3*st, np.mean(in_gauss[:,-1])+3*st, len(z_array))
 
                 d_mod = np.array([mod(ll) for ll in z_array])
 
