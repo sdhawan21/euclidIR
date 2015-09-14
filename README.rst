@@ -19,6 +19,25 @@ Installation:
 
 	python setup.py install
 
+	Installation for cosmology likelihood computation:
+		Depends on pymultinest
+		install the python wrapper
+		pip install pymultinest (--user if no root privileges)
+
+		Multinest installation
+		Download source from Johannes Buchner's github page
+	
+		cd Multinest
+		
+		mkdir build
+		
+		cd build
+			
+		sudo cmake .. && sudo make
+
+		run demo files to check
+
+
 Filter set sources:
 	LSST: SNANA, R.Kessler
 	Euclid: P. Astier, LPNHE Supernova
