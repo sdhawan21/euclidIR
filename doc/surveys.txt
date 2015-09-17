@@ -1,0 +1,14 @@
+NIR deep drilling survey
+
+Euclid: Deep drilling field, with limiting magnitudes as presented in Astier et al. 2014
+
+	Deep = "Yes"	for the DDF (H depth of 24.74)
+	Deep = "No"	Dedicated survey
+
+JWST: High-z rest frame NIR
+	300 SNe out to z = 1.4
+
+
+
+
+

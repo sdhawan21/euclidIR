@@ -1,0 +1,9 @@
+simlc : create bandpass for the SNcosmo format
+	design the redshift distribution for a survey for given length and area
+
+jwst: Redshift distribution at z > 0.8
+
+gen_mc: create the final cosmology arrays
+
+
+
