@@ -53,6 +53,14 @@ class abs_mag:
                 return np.concatenate([euclid_z_dist, jwst_z_dist])
                 
                 
+        def dist_err(self, zarr, sig_sys, sig_m=0.02):
+                """
+                Calculate the error in the distance modulus estimation
+                
+                """
+
+                sig_mu = np.sqrt(sig_sys**2 + (zarr/max(zarr))**2 * sig_m**2)
+                return sig_mu
                 
         def cosmology_array(self, std=[], redfile =  'redshift_distribution_jwst_300.dat'):
                 """
@@ -69,18 +77,21 @@ class abs_mag:
                 
                 in_gauss = self.load_dist()
 
-                #peak_arr = [ ]
-                
+                      
                 if std:
                         s_val = std[0]
+                        
                 else:
                         s_val = np.std(in_gauss[:,1])
+
+
                 peak_real = np.random.normal(np.mean(in_gauss[:,1]), s_val, len(z_array))
 
                 st = np.std(in_gauss[:,-1])
                 
-                err_real =  np.random.uniform(np.mean(in_gauss[:,-1])- 3*st, np.mean(in_gauss[:,-1])+3*st, len(z_array))
-
+                #err_real =  np.random.uniform(np.mean(in_gauss[:,-1])- 3*st, np.mean(in_gauss[:,-1])+3*st, len(z_array))
+                err_real = self.dist_err(z_array, s_val)
+                
                 d_mod = np.array([mod(ll) for ll in z_array])
 
 
