@@ -56,6 +56,12 @@ class abs_mag:
         def dist_err(self, zarr, sig_sys, sig_m=0.02):
                 """
                 Calculate the error in the distance modulus estimation
+                sig_mu = sqrt(sig_sys**2 + (z/zmax)**2 * sig_m**2)
+                
+                Hence, sig_mu is a function of z and the error on the photometry. 
+                The expression and the value for sig_m is taken from Cardone et al. 2012
+
+                See also the expression in Astier et al. 2014
                 
                 """
 

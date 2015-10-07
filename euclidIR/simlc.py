@@ -55,8 +55,8 @@ class simlc:
 
         try:
             this_dir, this_file = os.path.split(__file__)
-            data_path = os.path.join(this_dir, "filters/", filt+".trans")
-            wv,fl = np.loadtxt(data_path, unpack=True)
+            #data_path = os.path.join(this_dir, "filters/", filt+".trans")
+            #wv,fl = np.loadtxt(data_path, unpack=True)
             wv, fl = np.loadtxt(self.sourcedir+'filters/'+filt+'_CSP.dat', unpack=True)
             band = sncosmo.Bandpass(wv, fl, name=filt+'_CSP')
             return band
