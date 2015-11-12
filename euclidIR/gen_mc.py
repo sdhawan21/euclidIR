@@ -16,6 +16,7 @@ from jwst import filters, z_sne
 #simlc is the euclid filters module
 from simlc import build_lc, filtcov
 
+#requires pack to be installed
 from dist import mod
 
 class abs_mag:
@@ -68,15 +69,19 @@ class abs_mag:
                 sig_mu = np.sqrt(sig_sys**2 + (zarr/max(zarr))**2 * sig_m**2)
                 return sig_mu
                 
-        def cosmology_array(self, std=[], redfile =  'redshift_distribution_jwst_300.dat'):
+        def cosmology_array(self, std=[], redfile =  'redshift_distribution_jwst_300.dat', sd=2134):
                 """
                 Inputs: redshift distribution file
                 
+                Options: Standard deviation 
+                random number generator seed
                 Output: Array for cosmology
                 
                 
                 """
-                
+                #set the seed for the magnitude distribution
+                np.random.seed(sd)
+
                 redpath = os.path.join(self.this_dir, redfile)
                 
                 z_array = np.loadtxt(redpath)
@@ -90,12 +95,14 @@ class abs_mag:
                 else:
                         s_val = np.std(in_gauss[:,1])
 
-
-                peak_real = np.random.normal(np.mean(in_gauss[:,1]), s_val, len(z_array))
+                #mu = np.mean(in_gauss[:,1])
+                mu = -18.45
+                peak_real = np.random.normal(mu, s_val, len(z_array))
 
                 st = np.std(in_gauss[:,-1])
                 
                 #err_real =  np.random.uniform(np.mean(in_gauss[:,-1])- 3*st, np.mean(in_gauss[:,-1])+3*st, len(z_array))
+                
                 err_real = self.dist_err(z_array, s_val)
 		err_real = np.random.uniform(0.05, 0.08, len(z_array))                
                 d_mod = np.array([mod(ll) for ll in z_array])
@@ -103,10 +110,12 @@ class abs_mag:
 
                 sn = np.array(['sn'+str(k) for k in range(len(z_array)) ])
 
+                #stack into the final 4 column file
                 vs = np.vstack([sn, z_array, peak_real+d_mod, err_real]).T
                 
 
                 return vs
+
 
         def cosfit_form(self,name, std=[], path = '/Users/lapguest/workspaces/euclidsims/snfile/', redfile ='redshift_distribution_jwst_300.dat'):
 
