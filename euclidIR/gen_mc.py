@@ -97,7 +97,7 @@ class abs_mag:
                 
                 #err_real =  np.random.uniform(np.mean(in_gauss[:,-1])- 3*st, np.mean(in_gauss[:,-1])+3*st, len(z_array))
                 err_real = self.dist_err(z_array, s_val)
-                
+		err_real = np.random.uniform(0.05, 0.08, len(z_array))                
                 d_mod = np.array([mod(ll) for ll in z_array])
 
 

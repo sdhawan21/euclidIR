@@ -202,6 +202,7 @@ class z_sne:
             
             fcosm = self.filt_test(band, i)[0]
             vis_arr, ep_arr = self.limit_vis(band, i, sys, ep)
+
             if len(vis_arr) == 0 :
                 print "List is empty, no detection from JWST"
             else:
