@@ -131,13 +131,16 @@ class build_lc:
 
         self.filters=['Y', 'J', 'H']
 
-        #from Table 1 Astier et al. 2014
-        self.limits =['24.03', '24.08', '24.74']
+        #from Table 1 Astier et al. 2014 (the H-band is 24 mag (AB) not 24.74)
+        self.limits =['24.03', '24.08', '24.00']
 
         #from the Deep Survey (DESIRE)
         self.deep_limits = ['25.51', '25.83', '26.08']
 
     def modeldef(self):
+        #define the source of the template, e.g. SALT2, Hsiao et al., Nugent et al. 
+        #in this case, using Hsiao for the NIR extension
+
         #source = sncosmo.get_source('hsiao', version='2.0')
         model=sncosmo.Model('Hsiao')
         return model
@@ -196,7 +199,7 @@ class build_lc:
                 return list(disc_arr)
 
 
-    def expected_z_dist(self, z=[0., 0.8]):
+    def expected_z_dist(self, z=[0., 0.8], t=200, area=20):
 
         """
         For a 200d 20 square degree survey, the redshift distribution of expected supernovae (no magnitude cuts)
@@ -205,16 +208,15 @@ class build_lc:
 
         """
 
-        time = 200
-        area = 20
+                        
+        return sorted(list(sncosmo.zdist(z[0], z[1], time=t, area=area)))
 
-        return sorted(list(sncosmo.zdist(z[0], z[1], time=time, area=area)))
-
-    def z_disc_euclid(self, band, sys,ep, z=[0., 0.8], deep='No'):
+    def z_disc_euclid(self, band, sys,ep, z=[0., 0.8], t=200, area=20, deep='No'):
         """
         From the expected distribution, which SNe are discovered
         """
-        expected_z= self.expected_z_dist(z=z)
+
+        expected_z= self.expected_z_dist(z=z, t=t, area=area)
         obs_z_arr=[]
 
         for i in expected_z:
@@ -247,6 +249,7 @@ class filtcov:
 
         self.filters = ['Y', 'J', 'H']
         
+
     def frac(self, filt1):
         """
         Fractional coverage of the filter in observer frame with the filters on board Euclid

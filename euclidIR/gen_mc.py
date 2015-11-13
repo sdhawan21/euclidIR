@@ -46,6 +46,7 @@ class abs_mag:
         
                 Output: Redshift distribution
                 """
+
                 mag_dist = self.load_dist()[:,1]
 
                 jwst_z_dist = z_sne().obs_redshift_dist(n, band, sys, ep)
