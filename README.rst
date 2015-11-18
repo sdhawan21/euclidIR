@@ -37,6 +37,14 @@ Installation:
 
 		run demo files to check
 
+Redshift Distributions (a short guide):
+	1. EuclidDeep are the deep drilling fields redshift distribution, they do not inlcude a low- redshift anchor unless explicitly specific with 'lowz' in the title
+	2. EuclidDed is the dedicated NIR i-band survey with Euclid
+	3. EuclidDDF+JWST is a combination of low-z with Euclid and higher-z with JWST	
+	4. redshift_uniform is a uniform distribution U(0, zmax) as a 'fake' test scenario
+	5. JLA_z is the Betoule et al. 2014 distribution
+	6. 'z_euclid_100d_lowz.dat' is a shorter survey with a low-z anchor from the ground
+
 
 Filter set sources:
 	LSST: SNANA, R.Kessler

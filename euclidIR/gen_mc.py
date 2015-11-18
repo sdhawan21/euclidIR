@@ -118,7 +118,7 @@ class abs_mag:
                 return vs
 
 
-        def cosfit_form(self,name, std=[], path = '/Users/lapguest/workspaces/euclidsims/snfile/', redfile ='redshift_distribution_jwst_300.dat'):
+        def cosfit_form(self,name, std=[], path = '/Users/lapguest/workspaces/euclidsims/snfile/', redfile ='redshift_distribution_jwst_300.dat', seed=2222):
 
                 """
 
@@ -127,7 +127,7 @@ class abs_mag:
                 """
 
                 #obtain the array for the final cosmology fit 
-                cos = self.cosmology_array(std=std, redfile=redfile)
+                cos = self.cosmology_array(std=std, redfile=redfile, sd=seed)
 
 
                 sn=cos[:,0]; zer=np.zeros(len(cos))
@@ -136,3 +136,14 @@ class abs_mag:
                 vs=np.vstack([sn, cos[:,1], cos[:,1], zer, cos[:,2], cos[:,3], st, zer, zer, zer, zer, zer, zer]).T
                 assert len(vs[0]) == 13
                 np.savetxt(path+name, vs, fmt='%s')
+
+
+        def abs_mag_fileform(self, outfile,  meanmag=-18.47, stdmag=0.13, redfile='z_euclid_100d_lowz.dat'):
+                z = np.loadtxt(redfile)
+                mmag = np.random.normal(meanmag, stdmag, len(z)) 
+
+                errs = np.random.uniform(0.05, 0.08)
+                snname = np.array(['sn'+str(i) for i in range(len(z))])
+
+                vs = np.vstack([snname, z, mmag, errs]).T
+                np.savetxt(outfile, vs, fmt='%s')

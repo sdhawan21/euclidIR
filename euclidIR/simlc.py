@@ -8,6 +8,7 @@ euclid discovery in the deep drilling fields
 
 
 """
+
 import sncosmo
 import os
 import numpy as np
@@ -185,7 +186,9 @@ class build_lc:
                 limarr = np.array(self.deep_limits)
 
             limmag = limarr[filt_arr == input_filter[0]]
+
             print limmag, mag_arr
+
             disc_arr = mag_arr[mag_arr < float(limmag[0])]
             
             
@@ -215,8 +218,11 @@ class build_lc:
         """
         From the expected distribution, which SNe are discovered
         """
+        
+        #start with the expected distribution for a given zmax (given from the filter coverage of the satellite)
 
         expected_z= self.expected_z_dist(z=z, t=t, area=area)
+
         obs_z_arr=[]
 
         for i in expected_z:
@@ -402,6 +408,7 @@ class filtcov:
         print "The difference between the effective wavelength for the LSST filters and the redshifted rest frame filter is:", wave_eff_arr
 
    
+
         #deal with unique and non-unique cases separately.
 
         if len(wave_eff_arr) > 0:
