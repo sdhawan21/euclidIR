@@ -3,9 +3,11 @@ Simulating Light Curves for the Euclid SN survey in the Deep Fields
 
 Dependencies: astropy, sncosmo
 
-
 euclid discovery in the deep drilling fields
 
+Discovery: The peak magnitude is drawn from N(u, sigma) where mu ~ -18.47 and sigma ~ 0.13 mag (very, very crude approximation of the template drawing method)
+
+Note: When plotting z-distributions define binsize using the arange function.
 
 """
 
@@ -157,6 +159,7 @@ class build_lc:
             model.set_source_peakabsmag(peakmag, band, zpsys)
         except:
             model.set_source_peakabsmag(peakmag, simlc().create_bandpass(band), zpsys)
+
         return model
 
 
@@ -225,9 +228,9 @@ class build_lc:
 
         obs_z_arr=[]
 
-        for i in expected_z:
+        for i, z_val in enumerate(expected_z):
 
-            disc_arr =self.is_discover(band,i,sys,ep, deep=deep)
+            disc_arr =self.is_discover(band,z_val,sys,ep, deep=deep)
             
             #disc_arr = np.array(disc_arr)
             #disc_arr =list(disc_arr)
@@ -235,7 +238,7 @@ class build_lc:
             if not disc_arr:
                 print "No observations"
             else:
-                obs_z_arr.append(i)
+                obs_z_arr.append(z_val)
 
         return np.array(obs_z_arr)
 

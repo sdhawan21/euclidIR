@@ -138,12 +138,20 @@ class abs_mag:
                 np.savetxt(path+name, vs, fmt='%s')
 
 
-        def abs_mag_fileform(self, outfile,  meanmag=-18.47, stdmag=0.13, redfile='z_euclid_100d_lowz.dat'):
-                z = np.loadtxt(redfile)
+        def abs_mag_fileform(self, outfile,  meanmag=-18.47, stdmag=0.13, redfile='z_euclid_100d_lowz.dat', path='/Users/lapguest/workspaces/euclidsims/snfile/dat_files/sim_txt/'):
+
+                redpath = os.path.join(self.this_dir, redfile)
+
+                z = np.loadtxt(redpath)
+                
+                #the magnitude distribution is approximated as a gaussian
                 mmag = np.random.normal(meanmag, stdmag, len(z)) 
 
-                errs = np.random.uniform(0.05, 0.08)
+                #the errors are drawn from a uniform distribution
+                errs = np.random.uniform(0.05, 0.08, len(z))
+                
+                errs = np.random.uniform(.076, 0.014, len(z))
                 snname = np.array(['sn'+str(i) for i in range(len(z))])
 
                 vs = np.vstack([snname, z, mmag, errs]).T
-                np.savetxt(outfile, vs, fmt='%s')
+                np.savetxt(path+outfile, vs, fmt='%s')
