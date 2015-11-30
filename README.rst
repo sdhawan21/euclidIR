@@ -45,6 +45,8 @@ Redshift Distributions (a short guide):
 	5. JLA_z is the Betoule et al. 2014 distribution
 	6. 'z_euclid_100d_lowz.dat' is a shorter survey with a low-z anchor from the ground
 
+	A. euclid + 'survey time' + 'lowz anchor redshift'+'N_SN' in the anchor
+
 
 Filter set sources:
 	LSST: SNANA, R.Kessler
