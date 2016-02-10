@@ -163,12 +163,14 @@ class build_lc:
         return model
 
 
-    def is_discover(self, band, z, sys, ep, peakmag=-18.4, deep='No'):
+    def is_discover(self, band, z, sys, ep, peakmag=-18.4,  deep='No'):
+
             """
             INPUTS: Filter (rest frame), Redshift, Magnitude System, Epochs of observation 
             OPTIONS: Absolute Peak magnitude
 
             Outputs: array of observed magnitudes that are above the detection limit
+
             """
             
             input_filter = filtcov(z).obs_filt(band, z)[0]
@@ -217,7 +219,8 @@ class build_lc:
                         
         return sorted(list(sncosmo.zdist(z[0], z[1], time=t, area=area)))
 
-    def z_disc_euclid(self, band, sys,ep, z=[0., 0.8], t=200, area=20, deep='No'):
+    def z_disc_euclid(self, band, sys,ep, z=[0., 0.8], t=200, area=20, deep='No', peakmag=-18.4, stdmag=0.13):
+
         """
         From the expected distribution, which SNe are discovered
         """
@@ -228,9 +231,11 @@ class build_lc:
 
         obs_z_arr=[]
 
+        obs_mag_arr=[]
         for i, z_val in enumerate(expected_z):
-
-            disc_arr =self.is_discover(band,z_val,sys,ep, deep=deep)
+            
+            mag_val = peakmag#np.random.normal(peakmag, stdmag) 
+            disc_arr =self.is_discover(band,z_val,sys,ep, peakmag=mag_val, deep=deep)
             
             #disc_arr = np.array(disc_arr)
             #disc_arr =list(disc_arr)
@@ -238,18 +243,20 @@ class build_lc:
             if not disc_arr:
                 print "No observations"
             else:
-                obs_z_arr.append(z_val)
+                obs_z_arr.append(z_val)                
+                obs_mag_arr.append(mag_val)
 
-        return np.array(obs_z_arr)
+        return np.array(obs_z_arr), np.array(obs_mag_arr)
 
 
 class filtcov:
+
     """
     Class for filter coverage
 
     Determine the overlap between a rest -frame filter (redshifted) and an observer frame filter from the Euclid YJH set
-
     """
+
     def __init__(self, z):
         self.z = z
         self.y = simlc().create_bandpass('Y')
@@ -260,9 +267,11 @@ class filtcov:
         
 
     def frac(self, filt1):
+
         """
         Fractional coverage of the filter in observer frame with the filters on board Euclid
         """
+
         f1 = simlc().create_bandpass(filt1)
         reds_f1 = np.vstack([f1.wave, f1.trans]).T
         

@@ -98,6 +98,7 @@ class abs_mag:
 
                 #mu = np.mean(in_gauss[:,1])
                 mu = -18.45
+
                 peak_real = np.random.normal(mu, s_val, len(z_array))
 
                 st = np.std(in_gauss[:,-1])
@@ -151,6 +152,7 @@ class abs_mag:
                 errs = np.random.uniform(0.05, 0.08, len(z))
                 
                 errs = np.random.uniform(.076, 0.014, len(z))
+
                 snname = np.array(['sn'+str(i) for i in range(len(z))])
 
                 vs = np.vstack([snname, z, mmag, errs]).T
