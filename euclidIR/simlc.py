@@ -217,7 +217,7 @@ class build_lc:
 
         Zmax  set by the maximum redshift of the rest frame filters
 
-        SN rates are taken from the Perrett et al. 2012 paper for the SNe from SNLS survey
+        SN rates are taken from the Perrett et al. 2012 paper for the SNe from SNLS surveyx
         """
 
                         
