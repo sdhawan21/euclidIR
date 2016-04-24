@@ -1,3 +1,5 @@
+#3 Euclid  and 3 LSST filters defined within SNCosmo
+
 import numpy as np
 import os
 import sncosmo
