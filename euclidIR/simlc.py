@@ -476,7 +476,10 @@ class redshift_distribution:
             cond = bp_rest.wave*(1+z) < max(filtfun.wave[filtfun.trans > 0])
             
             simp_prod = simps(bp_rest.trans, bp_rest.wave)
-            simp_prod_cond = simps(bp_rest.trans[cond],bp_rest.wave[cond])
+            if len(bp_rest.wave[cond])>10:
+                simp_prod_cond = simps(bp_rest.trans[cond],bp_rest.wave[cond])
+            else:
+                simp_prod_cond=0
             if simp_prod_cond/simp_prod > .75:
                 return 1
             else:
