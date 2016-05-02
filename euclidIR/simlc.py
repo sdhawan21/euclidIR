@@ -184,12 +184,12 @@ class build_lc:
             mag_arr=mod.bandmag(fcosm, sys, ep)
 
             filt_arr = np.array(self.filters)
-
+            #if the deep fields limit is set use, else use dedicated survey limits from Astier+2014
             if deep == 'Yes':
                 limarr = np.array(self.limits)
             else:
                 limarr = np.array(self.deep_limits)
-
+            
             limmag = limarr[filt_arr == input_filter[0]]
 
             print limmag, mag_arr
@@ -437,3 +437,61 @@ class filtcov:
         else:
             print "The values for the overlap were all unique"
             return overlap_percent[overlap_percent[:,1].astype('float32')==max(overlap_percent[:,1].astype('float32')) ][0]
+
+
+class redshift_distribution:
+    """
+    calculate the expected redshift distribution for a given restframe filter. Main constraints:
+    1. filter cutoff
+    2. depth
+    """
+    def __init__(self):
+        """
+        Initialise the Euclid filters
+        """
+        
+        filtclass = simlc()
+        buildclass = build_lc()
+        self.euclidy = filtclass.create_bandpass('Y')
+        self.euclidj = filtclass.create_bandpass('J')
+        self.euclidh = filtclass.create_bandpass('H')
+        self.time_period = 100
+        self.z_expect = buildclass.expected_z_dist(t=self.time_period)
+        self.effwave_arr = np.array([self.euclidy.wave_eff, self.euclidj.wave_eff, self.euclidh.wave_eff])
+        self.filtarr = np.array([self.euclidy, self.euclidj, self.euclidh])
+        
+    def filtcheck(self, bandpass, z):
+        """
+        check if the redshifted effective wavelength is redder than the effective
+        wavelength of the reddest filter (yes, its a complicated sentence)
+        Input is a bandpass (as a string) and redshift
+        
+        """
+        bp_rest = sncosmo.get_bandpass(bandpass)
+
+        if bp_rest.wave_eff*(1+z)  > max(self.effwave_arr):
+            filtfun=self.filtarr[self.effwave_arr==max(self.effwave_arr)][0]
+
+            #condition: check what fraction of the redshifted filter is 
+            cond = bp_rest.wave*(1+z) < max(filtfun.wave[filtfun.trans > 0])
+            
+            simp_prod = simps(bp_rest.trans, bp_rest.wave)
+            simp_prod_cond = simps(bp_rest.trans[cond],bp_rest.wave[cond])
+            if simp_prod_cond/simp_prod > .75:
+                return 1
+            else:
+                print "rest-frame filter is too red for observation"
+                return 0
+        else:        
+            return 1
+    def filt_cons_redshift(self, bandpass):
+        zarr = self.z_expect
+        
+        truth_arr=[]
+        for i, zval in enumerate(zarr):
+            retval=self.filtcheck(bandpass, zval)
+            truth_arr.append(retval)
+
+        truth_arr=np.array(truth_arr)
+        print truth_arr
+        return np.array(zarr)[truth_arr>0.]
