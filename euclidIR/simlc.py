@@ -16,6 +16,12 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+#for filter definitions
+try:
+    import mydefs
+except:
+    raise ImportError ("failed to import mydefs")
+
 from scipy.interpolate import interp1d
 from astropy.table import Table
 from scipy.integrate import simps
@@ -452,15 +458,27 @@ class redshift_distribution:
         
         filtclass = simlc()
         buildclass = build_lc()
+        #define the Euclid filters
         self.euclidy = filtclass.create_bandpass('Y')
         self.euclidj = filtclass.create_bandpass('J')
         self.euclidh = filtclass.create_bandpass('H')
+        #define the LSST bandpass
+        self.lsstu = filtclass.create_LSST_bandpass('u')
+        self.lsstg = filtclass.create_LSST_bandpass('g')
+        self.lssty = filtclass.create_LSST_bandpass('y4')
+        #define the surveys for the check
+        self.surveys=["Euclid", "LSST"]
+
+        self.zran=[0.8, 1.4]        
         self.time_period = 100
         self.z_expect = buildclass.expected_z_dist(t=self.time_period)
         self.effwave_arr = np.array([self.euclidy.wave_eff, self.euclidj.wave_eff, self.euclidh.wave_eff])
+        self.lsst_effwave_arr = np.array([self.lsstu.wave_eff, self.lsstg.wave_eff, self.lssty.wave_eff])
         self.filtarr = np.array([self.euclidy, self.euclidj, self.euclidh])
+        self.lsst_filtarr = np.array([self.lsstu, self.lsstg, self.lssty])
+
         
-    def filtcheck(self, bandpass, z):
+    def filtcheck(self, bandpass, z, survey="Euclid"):
         """
         check if the redshifted effective wavelength is redder than the effective
         wavelength of the reddest filter (yes, its a complicated sentence)
@@ -468,12 +486,19 @@ class redshift_distribution:
         
         """
         bp_rest = sncosmo.get_bandpass(bandpass)
-
-        if bp_rest.wave_eff*(1+z)  > max(self.effwave_arr):
-            filtfun=self.filtarr[self.effwave_arr==max(self.effwave_arr)][0]
+        if survey == "Euclid":
+            effwave = self.effwave_arr
+            filtarr = self.filtarr
+            
+        elif survey == "LSST":
+            effwave = self.lsst_effwave_arr
+            filtarr = self.lsst_filtarr
+            
+        if bp_rest.wave_eff*(1+z)  > max(effwave):
+            filtfun=filtarr[effwave==max(effwave)][0]
 
             #condition: check what fraction of the redshifted filter is 
-            cond = bp_rest.wave*(1+z) < max(filtfun.wave[filtfun.trans > 0])
+            cond = bp_rest.wave*(1+z) < max(filtfun.wave[filtfun.trans > 1e-4])
             
             simp_prod = simps(bp_rest.trans, bp_rest.wave)
             if len(bp_rest.wave[cond])>10:
@@ -487,14 +512,26 @@ class redshift_distribution:
                 return 0
         else:        
             return 1
-    def filt_cons_redshift(self, bandpass):
-        zarr = self.z_expect
         
-        truth_arr=[]
-        for i, zval in enumerate(zarr):
-            retval=self.filtcheck(bandpass, zval)
-            truth_arr.append(retval)
+    def filt_cons_redshift(self, bandpass, survey="Euclid"):
+        """
+        Construct the observed redshift distribution based onthe filter coverage of a survey
+        """
+        if survey in self.surveys:
+            if survey == "Euclid":
+                zarr = self.z_expect
+            elif survey == "LSST":
+                zarr = np.random.uniform(self.zran[0], self.zran[1], 200)
+            
+            truth_arr=[]
+            for i, zval in enumerate(zarr):
+                retval=self.filtcheck(bandpass, zval)
+                truth_arr.append(retval)
 
-        truth_arr=np.array(truth_arr)
-        print truth_arr
-        return np.array(zarr)[truth_arr>0.]
+            truth_arr=np.array(truth_arr)
+            print truth_arr
+            return np.array(zarr)[truth_arr>0.]
+        
+        else:
+            print "Survey definition not valid, choose from", self.surveys
+            return 0
