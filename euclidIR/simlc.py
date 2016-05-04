@@ -17,10 +17,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #for filter definitions
-try:
-    import mydefs
-except:
-    raise ImportError ("failed to import mydefs")
+import mydefs
+#try:
+#    import mydefs
+#except:
+#    raise ImportError ("failed to import mydefs")
 
 from scipy.interpolate import interp1d
 from astropy.table import Table
@@ -146,6 +147,9 @@ class build_lc:
         #from the Deep Survey (DESIRE)
         self.deep_limits = ['25.51', '25.83', '26.08']
 
+        #modified limits
+        self.mod_limits=['24.53', '24.58', '24.50']
+        
     def modeldef(self):
         #define the source of the template, e.g. SALT2, Hsiao et al., Nugent et al. 
         #in this case, using Hsiao for the NIR extension
@@ -193,8 +197,10 @@ class build_lc:
             #if the deep fields limit is set use, else use dedicated survey limits from Astier+2014
             if deep == 'Yes':
                 limarr = np.array(self.limits)
-            else:
+            elif deep == 'No':
                 limarr = np.array(self.deep_limits)
+            elif deep == 'Mod':
+                limarr = np.array(self.mod_limits)
             
             limmag = limarr[filt_arr == input_filter[0]]
 
@@ -450,6 +456,7 @@ class redshift_distribution:
     calculate the expected redshift distribution for a given restframe filter. Main constraints:
     1. filter cutoff
     2. depth
+    
     """
     def __init__(self):
         """
@@ -513,19 +520,25 @@ class redshift_distribution:
         else:        
             return 1
         
-    def filt_cons_redshift(self, bandpass, survey="Euclid"):
+    def filt_cons_redshift(self, bandpass, z=[0.8, 1.4], survey="Euclid"):
         """
         Construct the observed redshift distribution based onthe filter coverage of a survey
+        Arguments:
+        --> filtername (should either be in SNcosmo or in the mydefs file)
+        Optional:
+        --> range of redshifts: default is [0.8, 1.4]
+        --> survey: default is Euclid
         """
         if survey in self.surveys:
             if survey == "Euclid":
                 zarr = self.z_expect
             elif survey == "LSST":
-                zarr = np.random.uniform(self.zran[0], self.zran[1], 200)
-            
+                zarr = np.random.uniform(z[0], z[1], 200)
             truth_arr=[]
+            
             for i, zval in enumerate(zarr):
-                retval=self.filtcheck(bandpass, zval)
+                #set the survey from the function's arguments
+                retval=self.filtcheck(bandpass, zval, survey=survey)
                 truth_arr.append(retval)
 
             truth_arr=np.array(truth_arr)
