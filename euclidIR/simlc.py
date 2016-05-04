@@ -531,7 +531,7 @@ class redshift_distribution:
         """
         if survey in self.surveys:
             if survey == "Euclid":
-                zarr = self.z_expect
+                zarr = build_lc().expected_z_dist(z=[z[0], z[1]], t=self.time_period)#self.z_expect
             elif survey == "LSST":
                 zarr = np.random.uniform(z[0], z[1], 200)
             truth_arr=[]

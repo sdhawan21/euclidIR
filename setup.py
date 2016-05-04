@@ -7,7 +7,7 @@ import euclidIR
 
 here = path.abspath(path.dirname(__file__))
 
-with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
+with open(path.join(here, 'description.rst'), encoding='utf-8') as f:
 	long_description = f.read()
 
 setup(
@@ -23,6 +23,7 @@ setup(
 
 	#url still to be added
 
+	#package_dir={'euclidIR': 'euclidIR'},
 	#choose your license
 	license='MIT',
 
@@ -39,6 +40,6 @@ setup(
 	
 	
 ], 
-
+	include_package_data=True
 
 )

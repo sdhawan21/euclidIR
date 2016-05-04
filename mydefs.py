@@ -1,16 +1,16 @@
-#3 Euclid  and 3 LSST filters defined within SNCosmo
-
 import numpy as np
 import os
 import sncosmo
 
-y_file = np.loadtxt('filters/Y.trans')
-j_file = np.loadtxt('filters/J.trans')
-h_file = np.loadtxt('filters/H.trans')
+cwd = os.getcwd()
+cwd+='/euclidIR'
+y_file = np.loadtxt(cwd+'/filters/Y.trans')
+j_file = np.loadtxt(cwd+'/filters/J.trans')
+h_file = np.loadtxt(cwd+'/filters/H.trans')
 
-y_lsst_file = np.loadtxt('filters/LSST_y4.dat')
-u_lsst_file = np.loadtxt('filters/LSST_u.dat')
-g_lsst_file = np.loadtxt('filters/LSST_g.dat')
+y_lsst_file = np.loadtxt(cwd+'/filters/lsst/LSST_y4.dat')
+u_lsst_file = np.loadtxt(cwd+'/filters/lsst/LSST_u.dat')
+g_lsst_file = np.loadtxt(cwd+'/filters/lsst/LSST_g.dat')
 
 
 band = sncosmo.Bandpass(y_file[:,0], y_file[:,1], name='euclidY')
