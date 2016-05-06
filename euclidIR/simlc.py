@@ -185,9 +185,10 @@ class build_lc:
             
             input_filter = filtcov(z).obs_filt(band, z)[0]
             
-
-            fcosm = simlc().create_bandpass(input_filter[0])
-
+            try:
+                fcosm = simlc().create_bandpass(input_filter[0])
+            except:
+                fcosm = sncosmo.get_bandpass(band)
             mod = self.set_params(band, z, peakmag=peakmag)
 
             
@@ -379,7 +380,7 @@ class filtcov:
             
             tran_obs = bp.trans
 
-            trans_thresh = max(tran_obs)/1e5
+            trans_thresh = 1e-4#max(tran_obs)/1e5
 
             wv_obs = bp.wave[bp.trans > trans_thresh]
             print wv_red[0], wv_obs[0], wv_red[-1], wv_obs[-1]
@@ -548,3 +549,15 @@ class redshift_distribution:
         else:
             print "Survey definition not valid, choose from", self.surveys
             return 0
+
+    def filter_depth_cons_redshift(self, bandpass, sys, ep, zinp=[0.0, 1.0], deep="Mod"):
+        obs_z_arr=[]
+        zexp = build_lc().expected_z_dist(z=[zinp[0], zinp[1]])
+        for i, zval in enumerate(zexp):
+            disc_arr = build_lc().is_discover(bandpass, zval, sys,ep, deep=deep)
+            if not disc_arr:
+                print "Not discovered"
+            else:
+                obs_z_arr.append(zval)
+
+        return np.array(obs_z_arr)
