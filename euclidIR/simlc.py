@@ -470,10 +470,11 @@ class redshift_distribution:
         self.euclidy = filtclass.create_bandpass('Y')
         self.euclidj = filtclass.create_bandpass('J')
         self.euclidh = filtclass.create_bandpass('H')
-        #define the LSST bandpass
+        #define the LSST bandpasses
         self.lsstu = filtclass.create_LSST_bandpass('u')
         self.lsstg = filtclass.create_LSST_bandpass('g')
         self.lssty = filtclass.create_LSST_bandpass('y4')
+        self.lsstz = filtclass.create_LSST_bandpass('z')
         #define the surveys for the check
         self.surveys=["Euclid", "LSST"]
 
@@ -481,12 +482,12 @@ class redshift_distribution:
         self.time_period = 100
         self.z_expect = buildclass.expected_z_dist(t=self.time_period)
         self.effwave_arr = np.array([self.euclidy.wave_eff, self.euclidj.wave_eff, self.euclidh.wave_eff])
-        self.lsst_effwave_arr = np.array([self.lsstu.wave_eff, self.lsstg.wave_eff, self.lssty.wave_eff])
+        self.lsst_effwave_arr = np.array([self.lsstu.wave_eff, self.lsstg.wave_eff, self.lsstz.wave_eff, self.lssty.wave_eff])
         self.filtarr = np.array([self.euclidy, self.euclidj, self.euclidh])
-        self.lsst_filtarr = np.array([self.lsstu, self.lsstg, self.lssty])
-
+        self.lsst_filtarr = np.array([self.lsstu, self.lsstg, self.lsstz, self.lssty ])
+        self.lsst_filtname = np.array(['lsstu', 'lsstg', 'lsstz', 'lssty4'])
         
-    def filtcheck(self, bandpass, z, survey="Euclid"):
+    def filtcheck(self, bandpass, z, frac=0.75, survey="Euclid", f_index=-1):
         """
         check if the redshifted effective wavelength is redder than the effective
         wavelength of the reddest filter (yes, its a complicated sentence)
@@ -502,8 +503,8 @@ class redshift_distribution:
             effwave = self.lsst_effwave_arr
             filtarr = self.lsst_filtarr
             
-        if bp_rest.wave_eff*(1+z)  > max(effwave):
-            filtfun=filtarr[effwave==max(effwave)][0]
+        if bp_rest.wave_eff*(1+z)  > effwave[f_index]:
+            filtfun=filtarr[effwave==effwave[f_index]][0]
 
             #condition: check what fraction of the redshifted filter is 
             cond = bp_rest.wave*(1+z) < max(filtfun.wave[filtfun.trans > 1e-4])
@@ -513,7 +514,7 @@ class redshift_distribution:
                 simp_prod_cond = simps(bp_rest.trans[cond],bp_rest.wave[cond])
             else:
                 simp_prod_cond=0
-            if simp_prod_cond/simp_prod > .75:
+            if simp_prod_cond/simp_prod > frac:
                 return 1
             else:
                 print "rest-frame filter is too red for observation"
@@ -521,7 +522,7 @@ class redshift_distribution:
         else:        
             return 1
         
-    def filt_cons_redshift(self, bandpass, z=[0.8, 1.4], survey="Euclid"):
+    def filt_cons_redshift(self, bandpass, frac=0.75, z=[0.8, 1.4], survey="Euclid", f_index=-1):
         """
         Construct the observed redshift distribution based onthe filter coverage of a survey
         Arguments:
@@ -539,7 +540,7 @@ class redshift_distribution:
             
             for i, zval in enumerate(zarr):
                 #set the survey from the function's arguments
-                retval=self.filtcheck(bandpass, zval, survey=survey)
+                retval=self.filtcheck(bandpass, zval, survey=survey, frac=frac, f_index=f_index)
                 truth_arr.append(retval)
 
             truth_arr=np.array(truth_arr)
@@ -550,9 +551,16 @@ class redshift_distribution:
             print "Survey definition not valid, choose from", self.surveys
             return 0
 
-    def filter_depth_cons_redshift(self, bandpass, sys, ep, zinp=[0.0, 1.0], deep="Mod"):
+    def filter_depth_cons_redshift(self, bandpass, sys, ep, t=100, zinp=[0.0, 1.0], deep="Mod"):
+        """
+        For a given set of filter depths, determine the maximum redshift that you can probe
+        Argument:
+        --> bandpass filter: <string>
+        --> magnitude system: ab or vega <string>
+        --> Epoch for observation: list of integers
+        """
         obs_z_arr=[]
-        zexp = build_lc().expected_z_dist(z=[zinp[0], zinp[1]])
+        zexp = build_lc().expected_z_dist(z=[zinp[0], zinp[1]], t=t)
         for i, zval in enumerate(zexp):
             disc_arr = build_lc().is_discover(bandpass, zval, sys,ep, deep=deep)
             if not disc_arr:

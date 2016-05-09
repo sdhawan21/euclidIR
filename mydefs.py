@@ -11,7 +11,7 @@ h_file = np.loadtxt(cwd+'/filters/H.trans')
 y_lsst_file = np.loadtxt(cwd+'/filters/lsst/LSST_y4.dat')
 u_lsst_file = np.loadtxt(cwd+'/filters/lsst/LSST_u.dat')
 g_lsst_file = np.loadtxt(cwd+'/filters/lsst/LSST_g.dat')
-
+z_lsst_file = np.loadtxt(cwd+'/filters/lsst/LSST_z.dat')
 
 band = sncosmo.Bandpass(y_file[:,0], y_file[:,1], name='euclidY')
 sncosmo.registry.register(band)
@@ -32,6 +32,8 @@ sncosmo.registry.register(lband1)
 lband2 = sncosmo.Bandpass(g_lsst_file[:,0], g_lsst_file[:,1], name='lsstg')
 sncosmo.registry.register(lband2)
 
+lband3 = sncosmo.Bandpass(z_lsst_file[:,0], z_lsst_file[:,1], name='lsstz')
+sncosmo.registry.register(lband3)
 
 
 
