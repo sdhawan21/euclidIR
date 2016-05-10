@@ -544,7 +544,21 @@ class redshift_distribution:
                 truth_arr.append(retval)
 
             truth_arr=np.array(truth_arr)
-            print truth_arr
+            print truth_arr#def m_func_const(z, om, w, h0):
+        """
+
+        Evaluate the distance modulus mu
+        mu = 5 * log10(D_L) + 25
+        for a given cosmology (wCDM in this case)
+
+        """
+	out = np.empty_like(z)
+        for i, z_value in enumerate(z):
+                out[i] = quad(w_func, 0, z_value, args=(om, w))[0]	
+                 
+        dpm = out*c/h0
+	ret = dpm * (1+z)
+	return 5*np.log10(ret) + 25 + peak_mean, zarr
             return np.array(zarr)[truth_arr>0.]
         
         else:
