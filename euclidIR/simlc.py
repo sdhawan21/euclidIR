@@ -149,6 +149,9 @@ class build_lc:
 
         #modified limits
         self.mod_limits=['24.53', '24.58', '24.50']
+
+        #astier+ limits
+        self.ast_limits=['24.03', '24.08', '24.74']
         
     def modeldef(self):
         #define the source of the template, e.g. SALT2, Hsiao et al., Nugent et al. 
@@ -158,7 +161,7 @@ class build_lc:
         model=sncosmo.Model('Hsiao')
         return model
 
-    def set_params(self, band, z, peakmag=-18.4, zpsys='ab'):
+    def set_params(self, band, z, peakmag=-18.4, zpsys='vega'):
         """
         set the model parameters, most importantly the absolute magnitude scale for the tempalte spectra.
         """
@@ -172,8 +175,11 @@ class build_lc:
 
         return model
 
-
-    def is_discover(self, band, z, sys, ep, peakmag=-18.4,  deep='No'):
+    def sigma(self, mag, m5sig=24):
+        #magnitude uncertainty for faint targets
+        return 0.2*pow(10, 0.4*(mag-m5sig))
+    
+    def is_discover(self, band, z, sys, ep, peakmag=-18.4, sig_thresh=0.3, deep='No'):
 
             """
             INPUTS: Filter (rest frame), Redshift, Magnitude System, Epochs of observation 
@@ -202,12 +208,16 @@ class build_lc:
                 limarr = np.array(self.deep_limits)
             elif deep == 'Mod':
                 limarr = np.array(self.mod_limits)
-            
+            elif deep == 'Ast':
+                limarr = np.array(self.ast_limits)
+            #extract the limiting magnitude for the appropriate filter    
             limmag = limarr[filt_arr == input_filter[0]]
-
             print limmag, mag_arr
 
-            disc_arr = mag_arr[mag_arr < float(limmag[0])]
+            sig_eval = self.sigma(mag_arr)
+            #strict threshold on the estimated error
+            ##(Do something more sophisticated??)
+            disc_arr = sig_eval[sig_eval <= sig_thresh]#mag_arr[mag_arr < float(limmag[0])]
             
             
             disc_arr = list(disc_arr)
@@ -236,7 +246,7 @@ class build_lc:
                         
         return sorted(list(sncosmo.zdist(z[0], z[1], time=t, area=area, ratefunc=self.snrate_perrett)))
 
-    def z_disc_euclid(self, band, sys,ep, z=[0., 0.8], t=200, area=20, deep='No', peakmag=-18.4, stdmag=0.13):
+    def z_disc_euclid(self, band, sys,ep, z=[0., 0.8], t=200, area=20, sig_thresh=0.3, deep='No', peakmag=-18.4, stdmag=0.13):
 
         """
         From the expected distribution, which SNe are discovered
@@ -252,7 +262,7 @@ class build_lc:
         for i, z_val in enumerate(expected_z):
             
             mag_val = peakmag#np.random.normal(peakmag, stdmag) 
-            disc_arr =self.is_discover(band,z_val,sys,ep, peakmag=mag_val, deep=deep)
+            disc_arr =self.is_discover(band,z_val,sys,ep, peakmag=mag_val, deep=deep, sig_thresh=sig_thresh)
             
             #disc_arr = np.array(disc_arr)
             #disc_arr =list(disc_arr)
@@ -544,21 +554,7 @@ class redshift_distribution:
                 truth_arr.append(retval)
 
             truth_arr=np.array(truth_arr)
-            print truth_arr#def m_func_const(z, om, w, h0):
-        """
-
-        Evaluate the distance modulus mu
-        mu = 5 * log10(D_L) + 25
-        for a given cosmology (wCDM in this case)
-
-        """
-	out = np.empty_like(z)
-        for i, z_value in enumerate(z):
-                out[i] = quad(w_func, 0, z_value, args=(om, w))[0]	
-                 
-        dpm = out*c/h0
-	ret = dpm * (1+z)
-	return 5*np.log10(ret) + 25 + peak_mean, zarr
+            print truth_arr#, zarr
             return np.array(zarr)[truth_arr>0.]
         
         else:
