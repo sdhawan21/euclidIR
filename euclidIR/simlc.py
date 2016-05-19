@@ -250,6 +250,7 @@ class build_lc:
 
         """
         From the expected distribution, which SNe are discovered
+        "Discovery" refers to having an error on a single observation of lower than a threshold. Set to 0.3 mag currently
         """
         
         #start with the expected distribution for a given zmax (given from the filter coverage of the satellite)
@@ -532,7 +533,7 @@ class redshift_distribution:
         else:        
             return 1
         
-    def filt_cons_redshift(self, bandpass, frac=0.75, z=[0.8, 1.4], survey="Euclid", f_index=-1):
+    def filt_cons_redshift(self, bandpass, frac=0.75, t=100, z=[0.8, 1.4], survey="Euclid", f_index=-1):
         """
         Construct the observed redshift distribution based onthe filter coverage of a survey
         Arguments:
@@ -543,7 +544,7 @@ class redshift_distribution:
         """
         if survey in self.surveys:
             if survey == "Euclid":
-                zarr = build_lc().expected_z_dist(z=[z[0], z[1]], t=self.time_period)#self.z_expect
+                zarr = build_lc().expected_z_dist(z=[z[0], z[1]], t=t)#self.z_expect
             elif survey == "LSST":
                 zarr = np.random.uniform(z[0], z[1], 200)
             truth_arr=[]
